@@ -13,6 +13,12 @@
 
 ## 🆕 最新更新
 
+### v1.2.0 (2025-08-13)
+- 🧰 一键 Docker 部署：新增 deploy.bat / deploy.sh 脚本，自动构建、启动、健康检查
+- 🩺 健康检查增强：新增 Node 版 healthcheck.js，移除对容器内 curl 依赖
+- 🧱 Dockerfile 优化：非 root 运行、清理 npm 缓存、健康检查脚本接入
+- 🧩 docker-compose 增强：完善健康检查、只读挂载初始化 SQL、传递 PORT 环境变量
+
 ### v1.1.0 (2024-01-20)
 - 🔧 **修复登录功能** - 解决了用户登录后数据显示异常的问题
 - 🔐 **优化认证流程** - 改进了密码登录和自动登录的数据处理逻辑
@@ -107,7 +113,7 @@ cd Schedule_Notice
 
 # 配置环境变量
 cp .env.docker .env
-nano .env  # 编辑邮箱配置
+nano .env  # 编辑邮箱配置（EMAIL_USER / EMAIL_PASS 必填）
 
 # 一键部署
 chmod +x deploy.sh
@@ -117,12 +123,12 @@ chmod +x deploy.sh
 **Windows:**
 ```cmd
 # 克隆项目
-git clone <repository-url>
+git clone https://github.com/chengzhaobing/Schedule_Notice.git
 cd Schedule_Notice
 
 # 配置环境变量
 copy .env.docker .env
-notepad .env  # 编辑邮箱配置
+notepad .env  # 编辑邮箱配置（EMAIL_USER / EMAIL_PASS 必填）
 
 # 一键部署
 deploy.bat
@@ -139,6 +145,8 @@ docker-compose ps
 # 查看日志
 docker-compose logs -f
 ```
+
+> 健康检查：容器将自动调用内置的 healthcheck.js 检查 http://localhost:3000/api/health，无需安装 curl。
 
 ### 方式二：传统部署
 
@@ -160,8 +168,8 @@ npm install
 cp .env.example .env
 # 编辑 .env 文件，配置数据库和邮箱信息
 
-# 4. 初始化数据库
-npm run init-db
+# 4. 初始化数据库（容器化部署会自动导入 scripts/init-db.sql）
+node scripts/init-db.js
 
 # 5. 启动服务
 npm start
@@ -248,229 +256,25 @@ EMAIL_PASS=应用密码
 
 ### 3. 管理日程
 - **查看**: 主界面显示所有日程
-- **搜索**: 使用搜索框按标题查找
-- **筛选**: 按优先级和状态筛选
-- **编辑**: 点击日程卡片进行编辑
-- **完成**: 点击勾选框标记完成
-- **删除**: 点击删除按钮移除日程
+- **编辑**: 点击日程项右上角的编辑图标
+- **完成**: 点击勾选按钮标记完成
+- **删除**: 点击垃圾桶图标删除
 
-### 4. 邮件提醒
-- 系统每分钟检查一次待提醒的日程
-- 到达设定时间自动发送邮件提醒
-- 邮件包含日程详细信息
-- 发送失败会自动重试
-- 达到最大提醒次数后停止发送
+## 🧪 故障排查
 
-## 🔧 API 接口
+- 构建失败：请确认 .env 中 Email 配置填写完整（EMAIL_USER/EMAIL_PASS）
+- 无法发送邮件：检查 SMTP 服务是否开启、密码是否为“应用密码”
+- MySQL 连接失败：确认端口占用、环境变量、容器健康状态（docker-compose ps）
+- 应用未就绪：查看健康检查日志 docker-compose logs app
 
-### 用户认证
-```http
-# 发送验证码
-POST /api/users/send-code
-Content-Type: application/json
-{
-  "email": "user@example.com"
-}
-
-# 验证登录
-POST /api/users/verify
-Content-Type: application/json
-{
-  "email": "user@example.com",
-  "code": "123456"
-}
-```
-
-### 日程管理
-```http
-# 获取日程列表
-GET /api/schedules
-Authorization: Bearer <token>
-
-# 创建日程
-POST /api/schedules
-Authorization: Bearer <token>
-Content-Type: application/json
-{
-  "title": "重要会议",
-  "description": "项目讨论会议",
-  "schedule_time": "2024-01-01T10:00:00",
-  "priority": "important",
-  "max_reminders": 3
-}
-
-# 更新日程
-PUT /api/schedules/:id
-Authorization: Bearer <token>
-
-# 删除日程
-DELETE /api/schedules/:id
-Authorization: Bearer <token>
-```
-
-### 系统监控
-```http
-# 健康检查
-GET /api/health
-
-# 响应示例
-{
-  "status": "ok",
-  "timestamp": "2024-01-01T12:00:00.000Z",
-  "database": "connected",
-  "email": "configured"
-}
-```
-
-## 🐳 Docker 详细说明
-
-### 容器架构
-- **app**: 应用服务容器
-- **mysql**: MySQL数据库容器
-- **schedule_network**: 内部网络
-- **mysql_data**: 数据持久化卷
-
-### 常用命令
-```bash
-# 启动服务
-docker-compose up -d
-
-# 停止服务
-docker-compose down
-
-# 重启服务
-docker-compose restart
-
-# 查看日志
-docker-compose logs -f app
-docker-compose logs -f mysql
-
-# 进入容器
-docker-compose exec app sh
-docker-compose exec mysql mysql -uroot -p
-
-# 备份数据库
-docker-compose exec mysql mysqldump -uroot -p schedule_notice > backup.sql
-
-# 恢复数据库
-docker-compose exec -T mysql mysql -uroot -p schedule_notice < backup.sql
-```
-
-### 数据持久化
-- MySQL数据存储在Docker卷中
-- 应用日志映射到本地`./logs`目录
-- 容器重启数据不会丢失
-
-## 🔍 故障排除
-
-### 常见问题
-
-#### 1. 邮件发送失败
-**症状**: 日程到时间但未收到邮件
-**解决方案**:
-- 检查邮箱配置是否正确
-- 确认应用密码而非登录密码
-- 查看应用日志确认错误信息
-- 测试SMTP连接
-
-#### 2. 数据库连接失败
-**症状**: 应用启动报数据库连接错误
-**解决方案**:
-- 检查MySQL服务是否启动
-- 确认数据库配置信息
-- 检查防火墙设置
-- 验证用户权限
-
-#### 3. Docker部署问题
-**症状**: 容器启动失败
-**解决方案**:
-```bash
-# 查看详细日志
-docker-compose logs
-
-# 重新构建镜像
-docker-compose build --no-cache
-
-# 清理并重启
-docker-compose down -v
-docker-compose up -d
-```
-
-#### 4. 端口占用
-**症状**: 端口3000已被占用
-**解决方案**:
-- 修改docker-compose.yml中的端口映射
-- 或停止占用端口的服务
-
-### 日志查看
-```bash
-# 应用日志
-docker-compose logs -f app
-
-# 数据库日志
-docker-compose logs -f mysql
-
-# 实时日志
-tail -f logs/app.log
-```
-
-## 🔒 安全考虑
-
-### 生产环境建议
-1. **更改默认密码**: 修改数据库root密码
-2. **JWT密钥**: 使用强随机密钥
-3. **HTTPS**: 配置SSL证书
-4. **防火墙**: 限制数据库端口访问
-5. **备份**: 定期备份数据库
-6. **监控**: 配置日志监控和告警
-
-### 数据保护
-- 验证码6位数字，5分钟过期
-- JWT Token 24小时过期
-- 数据库连接加密
-- 邮箱信息不存储密码
-
-## 📈 性能优化
-
-### 数据库优化
-- 添加必要索引
-- 定期清理过期数据
-- 连接池配置
-- 查询优化
-
-### 应用优化
-- 静态资源缓存
-- API响应压缩
-- 连接复用
-- 内存管理
-
-## 🤝 贡献指南
-
-### 开发环境搭建
-```bash
-# 克隆项目
-git clone https://github.com/chengzhaobing/Schedule_Notice.git
-cd Schedule_Notice
-
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm run dev
-```
-
-### 提交规范
-- feat: 新功能
-- fix: 修复bug
-- docs: 文档更新
-- style: 代码格式
-- refactor: 重构
-- test: 测试相关
-- chore: 构建过程或辅助工具的变动
+## 🛡️ 安全建议
+- 生产环境务必更改 JWT_SECRET
+- 不要在公开仓库提交真实邮箱密码
+- 建议使用专用 SMTP 账号或应用密码
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+本项目采用 MIT 许可证 - 详见 LICENSE 文件。
 
 ## 🙏 致谢
 
