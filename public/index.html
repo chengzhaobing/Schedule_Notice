@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日程通知系统</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 量子纠缠动态背景 -->
+    <div class="quantum-background" id="quantumBackground"></div>
+    
+    <!-- 加载动画 -->
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>正在加载...</p>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-calendar-check"></i>
+                    <h1>日程通知系统</h1>
+                </div>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="user-email" id="userEmail"></span>
+                    <button class="btn-logout" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 滚动横条 -->
+        <div class="scroll-banner">
+            <div class="scroll-text">
+                <span>欢迎使用日程通知系统 • 智能提醒，高效管理 • 让每一个重要时刻都不被遗忘 • </span>
+                <span>欢迎使用日程通知系统 • 智能提醒，高效管理 • 让每一个重要时刻都不被遗忘 • </span>
+            </div>
+        </div>
+
+        <!-- 欢迎界面 -->
+        <div id="welcomeScreen" class="welcome-screen">
+            <div class="welcome-content">
+                <div class="welcome-header">
+                    <div class="welcome-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h1>欢迎使用日程通知系统</h1>
+                    <p class="welcome-subtitle">智能提醒，让生活更有序</p>
+                    <p class="welcome-description">专为现代人设计的智能日程管理助手，让每一个重要时刻都不被遗忘</p>
+                </div>
+                
+                <div class="welcome-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <h3>邮件提醒</h3>
+                        <p>及时准确的邮件通知，不再错过重要事项</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>安全登录</h3>
+                        <p>无需密码，邮箱验证码安全便捷</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>智能管理</h3>
+                        <p>三级优先级，让重要事项优先处理</p>
+                    </div>
+                </div>
+                
+                <div class="welcome-actions">
+                    <button id="startBtn" class="btn btn-primary btn-large">
+                        <i class="fas fa-play"></i>
+                        开始使用
+                    </button>
+                    <button id="guestBtn" class="btn btn-outline">
+                        <i class="fas fa-eye"></i>
+                        以游客身份浏览
+                    </button>
+                    <button id="helpBtn" class="btn btn-secondary">
+                        <i class="fas fa-question-circle"></i>
+                        使用说明
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 登录模态框 -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-sign-in-alt"></i> 用户登录</h2>
+                    <button class="close-btn" id="closeLoginBtn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- 登录方式选择 -->
+                    <div class="login-tabs" data-active="password">
+                        <button class="tab-btn active" id="passwordTabBtn">
+                            <i class="fas fa-lock"></i>
+                            密码登录
+                        </button>
+                        <button class="tab-btn" id="emailTabBtn">
+                            <i class="fas fa-envelope"></i>
+                            邮箱验证
+                        </button>
+                    </div>
+
+                    <!-- 密码登录界面 -->
+                    <div id="passwordLogin" class="login-panel active">
+                        <div class="form-group">
+                            <label for="loginEmail">邮箱地址</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="loginEmail" placeholder="请输入邮箱地址" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">密码</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                                <button type="button" class="password-toggle" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="rememberMe">
+                                <span class="checkmark"></span>
+                                记住密码（30天）
+                            </label>
+                        </div>
+                        <button id="passwordLoginBtn" class="btn btn-primary btn-block">
+                            <i class="fas fa-sign-in-alt"></i>
+                            登录
+                        </button>
+                        <div class="login-tips">
+                            <p>还没有密码？<button class="btn btn-link" id="switchToEmailBtn">使用邮箱验证登录</button></p>
+                        </div>
+                    </div>
+
+                    <!-- 邮箱验证登录界面 -->
+                    <div id="emailLogin" class="login-panel">
+                        <div class="step-indicator">
+                            <div class="step-dot active" id="step1Dot"></div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" id="step2Dot"></div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" id="step3Dot"></div>
+                        </div>
+                        
+                        <!-- 步骤1: 输入邮箱 -->
+                        <div id="emailStep" class="step active">
+                            <div class="step-header">
+                                <h3>步骤 1: 输入邮箱</h3>
+                                <p class="step-description">请输入您的邮箱地址</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="emailInput">邮箱地址</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="emailInput" placeholder="请输入邮箱地址" required>
+                                </div>
+                            </div>
+                            <button id="sendCodeBtn" class="btn btn-primary btn-block">
+                                <i class="fas fa-paper-plane"></i>
+                                发送验证码
+                            </button>
+                        </div>
+                        
+                        <!-- 步骤2: 验证邮箱 -->
+                        <div id="codeStep" class="step">
+                            <div class="step-header">
+                                <h3>步骤 2: 验证邮箱</h3>
+                                <p class="step-description">验证码已发送到 <strong id="emailDisplay"></strong></p>
+                                <p class="step-tip">请检查您的邮箱（包括垃圾邮件文件夹）</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="codeInput">验证码</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-key"></i>
+                                    <input type="text" id="codeInput" placeholder="请输入6位验证码" maxlength="6" class="code-input">
+                                </div>
+                            </div>
+                            <div class="code-actions">
+                                <button id="verifyCodeBtn" class="btn btn-primary btn-block">
+                                    <i class="fas fa-check"></i>
+                                    验证邮箱
+                                </button>
+                                <div class="resend-section">
+                                    <button id="resendCodeBtn" class="btn btn-link" disabled>
+                                        <i class="fas fa-redo"></i>
+                                        重新发送
+                                    </button>
+                                    <div class="countdown" id="countdown"></div>
+                                </div>
+                            </div>
+                            <div class="back-to-email">
+                                <button id="backToEmailBtn" class="btn btn-text">
+                                    <i class="fas fa-arrow-left"></i>
+                                    返回修改邮箱
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 步骤3: 设置密码 -->
+                        <div id="passwordStep" class="step">
+                            <div class="step-header">
+                                <h3>步骤 3: 设置密码</h3>
+                                <p class="step-description">为您的账户设置密码，下次可直接使用密码登录</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">设置密码</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="newPassword" placeholder="请输入密码（至少6位）" required>
+                                    <button type="button" class="password-toggle" id="toggleNewPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">确认密码</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="confirmPassword" placeholder="请再次输入密码" required>
+                                    <button type="button" class="password-toggle" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="password-actions">
+                                <button id="setPasswordBtn" class="btn btn-primary btn-block">
+                                    <i class="fas fa-check"></i>
+                                    设置密码并登录
+                                </button>
+                                <button id="skipPasswordBtn" class="btn btn-outline btn-block">
+                                    <i class="fas fa-arrow-right"></i>
+                                    跳过，直接登录
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <main class="main-content" id="mainContent" style="display: none;">
+            <!-- 统计卡片 -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon urgent">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="urgentCount">0</h3>
+                        <p>紧急事项</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon important">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="importantCount">0</h3>
+                        <p>重要事项</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon normal">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="normalCount">0</h3>
+                        <p>一般事项</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon completed">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="completedCount">0</h3>
+                        <p>已完成</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作栏 -->
+            <div class="action-bar">
+                <div class="search-filter">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="搜索日程...">
+                    </div>
+                    <select id="priorityFilter" class="filter-select">
+                        <option value="">所有优先级</option>
+                        <option value="urgent">紧急</option>
+                        <option value="important">重要</option>
+                        <option value="normal">一般</option>
+                    </select>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">所有状态</option>
+                        <option value="false">未完成</option>
+                        <option value="true">已完成</option>
+                    </select>
+                </div>
+                <button id="addScheduleBtn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    添加日程
+                </button>
+            </div>
+
+            <!-- 日程列表 -->
+            <div class="schedule-list" id="scheduleList">
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-calendar-plus"></i>
+                    <h3>暂无日程</h3>
+                    <p>点击上方按钮添加您的第一个日程</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加/编辑日程模态框 -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 id="scheduleModalTitle">
+                    <i class="fas fa-calendar-plus"></i>
+                    添加日程
+                </h2>
+                <button class="modal-close" id="closeScheduleModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scheduleTitle">标题 <span class="required">*</span></label>
+                            <input type="text" id="scheduleTitle" placeholder="请输入日程标题" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="scheduleDescription">描述</label>
+                        <textarea id="scheduleDescription" placeholder="请输入日程描述（可选）" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scheduleDateTime">计划时间 <span class="required">*</span></label>
+                            <input type="datetime-local" id="scheduleDateTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="schedulePriority">优先级 <span class="required">*</span></label>
+                            <select id="schedulePriority" required>
+                                <option value="normal">一般</option>
+                                <option value="important">重要</option>
+                                <option value="urgent">紧急</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="maxReminders">最大提醒次数</label>
+                            <input type="number" id="maxReminders" min="1" max="5" value="3">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelScheduleBtn">
+                            <i class="fas fa-times"></i>
+                            取消
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveScheduleBtn">
+                            <i class="fas fa-save"></i>
+                            保存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 底部落款 -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div>© 2024 日程通知系统 - 让生活更有序</div>
+                <div class="footer-brand">出品人：cheng</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 使用说明模态框 -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2><i class="fas fa-book-open"></i> 使用说明</h2>
+                <button class="close-btn" id="closeHelpBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3><i class="fas fa-user-plus"></i> 快速开始</h3>
+                    <ol>
+                        <li>点击"开始使用"按钮</li>
+                        <li>输入您的邮箱地址</li>
+                        <li>查收验证码邮件并输入验证码</li>
+                        <li>开始创建和管理您的日程</li>
+                    </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h3><i class="fas fa-calendar-plus"></i> 创建日程</h3>
+                    <ul>
+                        <li><strong>标题：</strong>简洁明了地描述您的任务</li>
+                        <li><strong>描述：</strong>添加详细信息（可选）</li>
+                        <li><strong>时间：</strong>设置日程的执行时间</li>
+                        <li><strong>优先级：</strong>选择紧急、重要或普通</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h3><i class="fas fa-bell"></i> 智能提醒</h3>
+                    <ul>
+                        <li><strong>紧急：</strong>提前5分钟、1小时、1天提醒</li>
+                        <li><strong>重要：</strong>提前1小时、1天提醒</li>
+                        <li><strong>普通：</strong>提前1天提醒</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h3><i class="fas fa-star"></i> 系统优势</h3>
+                    <ul>
+                        <li>🔒 <strong>安全便捷：</strong>无需密码，邮箱验证登录</li>
+                        <li>📧 <strong>邮件提醒：</strong>多时间点智能提醒，不错过重要事项</li>
+                        <li>🎯 <strong>优先级管理：</strong>三级优先级，重要事项优先处理</li>
+                        <li>📱 <strong>响应式设计：</strong>支持手机、平板、电脑多端使用</li>
+                        <li>⚡ <strong>实时同步：</strong>数据云端存储，随时随地访问</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle"></i> 确认删除</h2>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除这个日程吗？此操作无法撤销。</p>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">
+                        <i class="fas fa-times"></i>
+                        取消
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i>
+                        删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notifications" class="notifications"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
